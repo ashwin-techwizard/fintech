@@ -1,0 +1,78 @@
+version: '2'
+services:
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      # KAFKA_ADVERTISED_PORT: "9092"
+      KAFKA_CREATE_TOPICS: "stats:2:1, output:1:1"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # HOSTNAME_COMMAND: "route -n | awk '/UG[ \t]/{print $$2}'"
+      # KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://WizardMachine:39092
+      # # extra_hosts:
+      # #   - "moby:127.0.0.1"
+
+  producer:
+    image: ashwin/kafka-flask-producer:latest
+    depends_on:
+      - kafka
+    build:
+      context: ./producer
+    ports:
+      - "8282:80"
+
+  consumer:
+    depends_on:
+      - kafka
+      - producer
+      - javaproducer
+    image: ashwin/kafka-flask-consumer:latest
+    build:
+      context: ./consumer
+    ports:
+      - "8283:80"
+
+  javaproducer:
+    depends_on:
+      - kafka
+    image: ashwin/kafka-spring-producer:latest
+    build:
+      context: ./spring
+    ports:
+      - "8086:8086"
+
+  jobmanager:
+    image: fhueske/flink-sql-training-flink-s3:1.11.1-scala_2.11
+    build: ./images/flink-image
+    hostname: "jobmanager"
+    expose:
+      - "6123"
+    ports:
+      - "8081:8081"
+    command: jobmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+      
+  taskmanager:
+    image: fhueske/flink-sql-training-flink-s3:1.11.1-scala_2.11
+    build: ./images/flink-image
+    expose:
+      - "6121"
+      - "6122"
+    depends_on:
+      - jobmanager
+    command: taskmanager
+    links:
+      - jobmanager:jobmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager

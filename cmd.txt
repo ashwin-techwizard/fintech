@@ -1,0 +1,7 @@
+http://localhost:8081/kafka/publish/stats:sam
+ 
+curl localhost:8283/events
+
+curl -X POST -H "Content-Type: application/json" localhost:8282/events -d '{"event" : "a bla event"}'
+
+curl localhost:8283/aggregate

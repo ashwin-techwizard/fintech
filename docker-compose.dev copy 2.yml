@@ -1,0 +1,40 @@
+version: '2'
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_CREATE_TOPICS: "stats:2:1"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://WizardMachine:39092
+      # # extra_hosts:
+      # #   - "moby:127.0.0.1"
+
+  producer:
+    image: ashwin/kafka-flask-producer:latest
+    build:
+      context: ./producer
+    ports:
+      - "8282:80"
+
+  consumer:
+    image: ashwin/kafka-flask-consumer:latest
+    build:
+      context: ./consumer
+    ports:
+      - "8283:80"
+
+  javaproducer:
+    image: ashwin/kafka-spring-producer:latest
+    build:
+      context: ./spring
+    ports:
+      - "8045:8045"
+  

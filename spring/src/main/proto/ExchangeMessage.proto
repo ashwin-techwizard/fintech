@@ -1,0 +1,12 @@
+package transaction_def;
+
+option java_package = "kafka.message";
+option java_outer_classname = "transaction";
+option optimize_for = SPEED;
+
+message transaction {
+  optional string oid = 1;
+  optional string oid = 1;
+  optional string oid = 1;
+  optional string oid = 1;
+}
